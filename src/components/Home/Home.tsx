@@ -5,6 +5,8 @@ import "./home.css";
 export default function Home () {
 
     const [data, setData] = useState<any[]>([]);
+    const [colorButton, setColorButton] = useState(false);
+
     let results:any[] = [];
 
     useEffect(()=>{
@@ -29,19 +31,23 @@ export default function Home () {
             })
         }
     }
+
+    function toggleColor () {
+        setColorButton(!colorButton);
+    }
     
 
     return(
         <main>
             <h1>Prueba Técnica</h1>
             <div className="buttons">
-                <button className="addColorButton">Colorear</button>
+                <button className="addColorButton" onClick={toggleColor}>Colorear</button>
                 <button className="orderByCountry">Ordenar por país</button>
                 <button className="restartState">Resetear estado</button>
                 <input className="filterByCountry"></input>
             </div>
             <table>
-                <tbody>
+                <thead>
                     <tr>
                         <th>Foto</th>
                         <th>Nombre</th>
@@ -49,6 +55,8 @@ export default function Home () {
                         <th>País</th>
                         <th>Acciones</th>
                     </tr>
+                </thead>
+                <tbody className={colorButton ? "colorActive" : ""}>
                     {results}
                 </tbody>
             </table>

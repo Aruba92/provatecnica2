@@ -6,10 +6,11 @@ export default function Home () {
 
     const hasLoadedBefore = useRef(true); //for avoid two initial apiCalls every time (react do 2 renders)
     const [apiData, setApiData] = useState<any[]>([]);
-    const [tableDataDisordered, setTableDataDisordered] = useState<any[]>([]);
-    const [tableData, setTableData] = useState<any[]>([]);
+    const [data, setData] = useState<any[]>([]);
+
     const [toggleColor, setToggleColor] = useState(false);
     const [toggleOrder, setToggleOrder] = useState(false);
+    const [deletedRows, setDeletedRows] = useState<number[]>([]);
 
     useEffect(()=>{
         if (hasLoadedBefore.current){
@@ -18,30 +19,51 @@ export default function Home () {
             });
             hasLoadedBefore.current = false;
         }
-    },[apiData]);
+    },[]);
+
+    useEffect(()=>{
+        modifyData();
+    },[toggleOrder,deletedRows])
 
     const setValues = (result:any) => {
         setApiData(result);
-        setTableData([...result]);
-        setTableDataDisordered([...result]);
+        setData([...result]);
+    }
+    
+    function modifyData () {
+        /*INITIALIZE A NEW TABLE DATA FROM apiData*/
+        let data:any[] = [...apiData];
+
+        /*ORDER TABLE DATA*/
+        if (toggleOrder) {
+            data.sort((a, b) => a.location.country.localeCompare(b.location.country));
+        }
+        
+        /*DELETE TABLE ROW*/
+        if (deletedRows.length > 0) {
+            deletedRows.forEach((row)=>{
+                function isTrue(element:any){
+                    if (element.email == row){
+                        return true;
+                    }else{
+                        return false;
+                    }
+                }
+                let index = data.findIndex(isTrue);
+                data.splice(index, 1);
+            })
+        }
+
+        /*SAVE CHANGES IN TABLE DATA*/
+        setData([
+            ...data //spread syntax
+        ]);
     }
 
-    useEffect(()=>{ //Change the Data in the table according to toggleOrder to Order or Disorder the data.
-        if (toggleOrder) {
-            tableData.sort((a, b) => a.location.country.localeCompare(b.location.country));
-            setTableData([
-                ...tableData //spread syntax
-            ]);
-        }else{
-            setTableData([
-                ...tableDataDisordered
-            ]);
-        }
-    },[toggleOrder])
-
-    /* function deleteArrow () {
-        
-    } */
+    function restartData () {
+        setDeletedRows([]);
+        setData([...apiData]);
+    }
 
     return(
         <main>
@@ -49,7 +71,7 @@ export default function Home () {
             <div className="buttons">
                 <button className="addColorButton" onClick={()=>setToggleColor(!toggleColor)}>Colorear</button>
                 <button className="orderByCountry" onClick={()=>setToggleOrder(!toggleOrder)}>Ordenar por país</button>
-                <button className="restartState">Resetear estado</button>
+                <button className="restartState" onClick={restartData}>Resetear estado</button>
                 <input className="filterByCountry"></input>
             </div>
             <table>
@@ -63,17 +85,18 @@ export default function Home () {
                     </tr>
                 </thead>
                 <tbody className={toggleColor ? "colorActive" : ""}>
-                    {tableData.map((element:any, k:number)=>{
+                    {data.map((element:any)=>{
+                        let key =element.email;
                         return(
-                            <tr key={k+"0"}>
-                                <td key={k+"1"}>
+                            <tr key={key}>
+                                <td>
                                     <img src={element.picture.thumbnail}></img>
                                 </td>
-                                <td key={k+"2"}>{element.name.first}</td>
-                                <td key={k+"3"}>{element.name.last}</td>
-                                <td key={k+"4"}>{element.location.country}</td>
-                                <td key={k+"5"}>
-                                    <button /* onClick={deleteArrow} */>Borrar</button>
+                                <td>{element.name.first}</td>
+                                <td>{element.name.last}</td>
+                                <td>{element.location.country}</td>
+                                <td>
+                                    <button onClick={()=>setDeletedRows([...deletedRows, key])}>Borrar</button>
                                 </td>
                             </tr>
                         )

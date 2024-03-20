@@ -5,41 +5,44 @@ import "./home.css";
 export default function Home () {
 
     const hasLoadedBefore = useRef(true); //for avoid two initial apiCalls every time (react do 2 renders)
-    //let apiData:any[] = [];
     const [apiData, setApiData] = useState<any[]>([]);
+    const [tableDataDisordered, setTableDataDisordered] = useState<any[]>([]);
     const [tableData, setTableData] = useState<any[]>([]);
     const [toggleColor, setToggleColor] = useState(false);
     const [toggleOrder, setToggleOrder] = useState(false);
 
-
-    useEffect(()=>{ //set apiData and tableDate with the return from the apiCall
+    useEffect(()=>{
         if (hasLoadedBefore.current){
             GetUser().then((result)=>{
-                setApiData(result);
-                setTableData(result);
+                setValues(result);
             });
             hasLoadedBefore.current = false;
         }
     },[apiData]);
 
+    const setValues = (result:any) => {
+        setApiData(result);
+        setTableData([...result]);
+        setTableDataDisordered([...result]);
+    }
+
     useEffect(()=>{ //Change the Data in the table according to toggleOrder to Order or Disorder the data.
         if (toggleOrder) {
-            let newArray = [...apiData];
-            let dataSorted = newArray.sort((a, b) => a.location.country.localeCompare(b.location.country));
+            tableData.sort((a, b) => a.location.country.localeCompare(b.location.country));
             setTableData([
-                ...dataSorted //spread syntax
+                ...tableData //spread syntax
             ]);
         }else{
-            if (apiData.length > 0) {
-                setTableData([
-                    ...apiData
-                ]);
-            }
-            
+            setTableData([
+                ...tableDataDisordered
+            ]);
         }
     },[toggleOrder])
 
-    
+    /* function deleteArrow () {
+        
+    } */
+
     return(
         <main>
             <h1>Prueba Técnica</h1>
@@ -70,7 +73,7 @@ export default function Home () {
                                 <td key={k+"3"}>{element.name.last}</td>
                                 <td key={k+"4"}>{element.location.country}</td>
                                 <td key={k+"5"}>
-                                    <button>Borrar</button>
+                                    <button /* onClick={deleteArrow} */>Borrar</button>
                                 </td>
                             </tr>
                         )

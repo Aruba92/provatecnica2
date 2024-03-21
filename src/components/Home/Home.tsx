@@ -9,7 +9,8 @@ export default function Home () {
     const [data, setData] = useState<any[]>([]);
 
     const [toggleColor, setToggleColor] = useState(false);
-    const [toggleOrder, setToggleOrder] = useState(false);
+    const [toggleSort, setToggleSort] = useState(true);
+    const [sortType, setSortType] = useState<number>(0);
     const [deletedRows, setDeletedRows] = useState<number[]>([]);
     const [countryFilter, setCountryFilter] = useState<string>("");
 
@@ -24,7 +25,7 @@ export default function Home () {
 
     useEffect(()=>{
         modifyData();
-    },[toggleOrder,deletedRows, countryFilter])
+    },[sortType, toggleSort, deletedRows, countryFilter])
 
     const setValues = (result:any) => {
         setApiData(result);
@@ -35,10 +36,27 @@ export default function Home () {
         /*INITIALIZE A NEW TABLE DATA FROM apiData*/
         let data:any[] = [...apiData];
 
-        /*ORDER TABLE DATA BY COUNTRY*/
-        if (toggleOrder) {
-            data.sort((a, b) => a.location.country.localeCompare(b.location.country));
-        }
+        /*SORT TABLE DATA BY COUNTRY, NAME OR LASTNAME*/
+        if (sortType!==0){
+            switch (sortType){
+                case 1://name
+                    data.sort((a, b) => a.name.first.localeCompare(b.name.first));
+                    break;
+                case 2://lastName
+                    data.sort((a, b) => a.name.last.localeCompare(b.name.last));
+                    break;
+                case 3://country
+                    if (!toggleSort) {
+                        data.sort((a, b) => a.location.country.localeCompare(b.location.country));
+                    }else{
+                        setSortType(0);
+                    }
+                    break;
+                default:
+                    setSortType(0);
+                    break;
+            }
+        } 
         
         /*DELETE TABLE ROW*/
         if (deletedRows.length > 0) {
@@ -76,13 +94,22 @@ export default function Home () {
         setCountryFilter(e.target.value);
     }
 
+    function sortTable (type:number) {
+        if (type===3){
+            setToggleSort(!toggleSort);    
+        }else{
+            setToggleSort(true);
+        }
+        setSortType(type);
+    }
+
 
     return(
         <main>
             <h1>Prueba Técnica</h1>
             <div className="buttons">
                 <button className={toggleColor? "active":""} onClick={()=>setToggleColor(!toggleColor)}>Colorear</button>
-                <button className={toggleOrder? "active":""} onClick={()=>setToggleOrder(!toggleOrder)}>Ordenar por país</button>
+                <button className={sortType===3? "active":""} onClick={()=>sortTable(3)}>Ordenar por país</button>
                 <button onClick={restartData}>Resetear estado</button>
                 <input onKeyUp={()=>filterWord(event)}></input>
             </div>
@@ -90,9 +117,9 @@ export default function Home () {
                 <thead>
                     <tr>
                         <th>Foto</th>
-                        <th>Nombre</th>
-                        <th>Apellido</th>
-                        <th className={toggleOrder? "active":""} onClick={()=>setToggleOrder(!toggleOrder)}>País</th>
+                        <th className={sortType===1? "active":""} onClick={()=>sortTable(1)}>Nombre</th>
+                        <th className={sortType===2? "active":""} onClick={()=>sortTable(2)}>Apellido</th>
+                        <th className={sortType===3? "active":""} onClick={()=>sortTable(3)}>País</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>

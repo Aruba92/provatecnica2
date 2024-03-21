@@ -11,6 +11,7 @@ export default function Home () {
     const [toggleColor, setToggleColor] = useState(false);
     const [toggleOrder, setToggleOrder] = useState(false);
     const [deletedRows, setDeletedRows] = useState<number[]>([]);
+    const [countryFilter, setCountryFilter] = useState<string>("");
 
     useEffect(()=>{
         if (hasLoadedBefore.current){
@@ -23,7 +24,7 @@ export default function Home () {
 
     useEffect(()=>{
         modifyData();
-    },[toggleOrder,deletedRows])
+    },[toggleOrder,deletedRows, countryFilter])
 
     const setValues = (result:any) => {
         setApiData(result);
@@ -54,6 +55,12 @@ export default function Home () {
             })
         }
 
+        /*FILTER BY COUNTRY*/
+        if (countryFilter != "") {
+            let filteredData = data.filter((element:any) => element.location.country.toLowerCase().startsWith(countryFilter));
+            data = filteredData;
+        }
+
         /*SAVE CHANGES IN TABLE DATA*/
         setData([
             ...data //spread syntax
@@ -65,6 +72,11 @@ export default function Home () {
         setData([...apiData]);
     }
 
+    function filterWord (e:any) {
+        setCountryFilter(e.target.value);
+    }
+
+
     return(
         <main>
             <h1>Prueba Técnica</h1>
@@ -72,7 +84,7 @@ export default function Home () {
                 <button className="addColorButton" onClick={()=>setToggleColor(!toggleColor)}>Colorear</button>
                 <button className="orderByCountry" onClick={()=>setToggleOrder(!toggleOrder)}>Ordenar por país</button>
                 <button className="restartState" onClick={restartData}>Resetear estado</button>
-                <input className="filterByCountry"></input>
+                <input className="filterByCountry" onKeyUp={()=>filterWord(event)}></input>
             </div>
             <table>
                 <thead>

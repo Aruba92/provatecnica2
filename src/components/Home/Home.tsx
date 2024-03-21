@@ -35,7 +35,7 @@ export default function Home () {
         /*INITIALIZE A NEW TABLE DATA FROM apiData*/
         let data:any[] = [...apiData];
 
-        /*ORDER TABLE DATA*/
+        /*ORDER TABLE DATA BY COUNTRY*/
         if (toggleOrder) {
             data.sort((a, b) => a.location.country.localeCompare(b.location.country));
         }
@@ -81,10 +81,10 @@ export default function Home () {
         <main>
             <h1>Prueba Técnica</h1>
             <div className="buttons">
-                <button className="addColorButton" onClick={()=>setToggleColor(!toggleColor)}>Colorear</button>
-                <button className="orderByCountry" onClick={()=>setToggleOrder(!toggleOrder)}>Ordenar por país</button>
-                <button className="restartState" onClick={restartData}>Resetear estado</button>
-                <input className="filterByCountry" onKeyUp={()=>filterWord(event)}></input>
+                <button className={toggleColor? "active":""} onClick={()=>setToggleColor(!toggleColor)}>Colorear</button>
+                <button className={toggleOrder? "active":""} onClick={()=>setToggleOrder(!toggleOrder)}>Ordenar por país</button>
+                <button onClick={restartData}>Resetear estado</button>
+                <input onKeyUp={()=>filterWord(event)}></input>
             </div>
             <table>
                 <thead>
@@ -92,7 +92,7 @@ export default function Home () {
                         <th>Foto</th>
                         <th>Nombre</th>
                         <th>Apellido</th>
-                        <th>País</th>
+                        <th className={toggleOrder? "active":""} onClick={()=>setToggleOrder(!toggleOrder)}>País</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>

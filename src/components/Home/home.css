@@ -10,6 +10,11 @@ main{
     margin: 40px;
 }
 
+.active{
+    background-color: rgb(17, 77, 206);
+    color: rgb(233, 233, 233);
+}
+
 table{
     width: 100%;
 }

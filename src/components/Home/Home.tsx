@@ -5,7 +5,8 @@ import "./home.css";
 export default function Home () {
 
     const hasLoadedBefore = useRef(true); //for avoid two initial apiCalls every time (react do 2 renders)
-    const [apiData, setApiData] = useState<any[]>([]);
+    //const [apiData, setApiData] = useState<any[]>([]);
+    const apiData = useRef([]);
     const [data, setData] = useState<any[]>([]);
 
     const [toggleColor, setToggleColor] = useState(false);
@@ -28,7 +29,7 @@ export default function Home () {
     },[sortType, toggleSort, deletedRows, countryFilter])
 
     const setValues = (result:any) => {
-        setApiData(result);
+        apiData.current = result;
         result.forEach((element:any, key:number)=>{ //add unique Key to Data elements
             element.id = key;
         })
@@ -37,7 +38,7 @@ export default function Home () {
     
     function modifyData () {
         /*INITIALIZE A NEW TABLE DATA FROM apiData*/
-        let data:any[] = [...apiData];
+        let data:any[] = [...apiData.current];
 
         /*SORT TABLE DATA BY COUNTRY, NAME OR LASTNAME*/
         if (sortType!==0){
@@ -90,7 +91,7 @@ export default function Home () {
 
     function restartData () {
         setDeletedRows([]);
-        setData([...apiData]);
+        setData([...apiData.current]);
     }
 
     function filterWord (e:any) {

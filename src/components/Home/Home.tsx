@@ -29,6 +29,9 @@ export default function Home () {
 
     const setValues = (result:any) => {
         setApiData(result);
+        result.forEach((element:any, key:number)=>{ //add unique Key to Data elements
+            element.id = key;
+        })
         setData([...result]);
     }
     
@@ -62,7 +65,7 @@ export default function Home () {
         if (deletedRows.length > 0) {
             deletedRows.forEach((row)=>{
                 function isTrue(element:any){
-                    if (element.email == row){
+                    if (element.id == row){
                         return true;
                     }else{
                         return false;
@@ -125,9 +128,8 @@ export default function Home () {
                 </thead>
                 <tbody className={toggleColor ? "colorActive" : ""}>
                     {data.map((element:any)=>{
-                        let key =element.email;
                         return(
-                            <tr key={key}>
+                            <tr key={element.id}>
                                 <td>
                                     <img src={element.picture.thumbnail}></img>
                                 </td>
@@ -135,7 +137,7 @@ export default function Home () {
                                 <td>{element.name.last}</td>
                                 <td>{element.location.country}</td>
                                 <td>
-                                    <button onClick={()=>setDeletedRows([...deletedRows, key])}>Borrar</button>
+                                    <button onClick={()=>setDeletedRows([...deletedRows, element.id])}>Borrar</button>
                                 </td>
                             </tr>
                         )

@@ -1,13 +1,11 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import GetUser from "../../services/APIcall";
 import "./home.css";
 
 export default function Home () {
 
-    const hasLoadedBefore = useRef(true); //for avoid two initial apiCalls every time (react do 2 renders)
-    //const [apiData, setApiData] = useState<any[]>([]);
-    const apiData = useRef([]);
-    const [data, setData] = useState<any[]>([]);
+    const apiData = useRef(undefined);
+    const [loaded, setLoaded] = useState(false);
 
     const [toggleColor, setToggleColor] = useState(false);
     const [toggleSort, setToggleSort] = useState(true);
@@ -15,43 +13,46 @@ export default function Home () {
     const [deletedRows, setDeletedRows] = useState<number[]>([]);
     const [countryFilter, setCountryFilter] = useState<string>("");
 
+    const orderedData:any = useMemo(()=>sortTab(),[sortType, toggleSort, loaded]);
+    const filteredData:any = useMemo(()=>filter(),[countryFilter, orderedData]);
+    const deletedData:any = useMemo(()=>deleteRows(),[deletedRows, filteredData]);
+    
     useEffect(()=>{
-        if (hasLoadedBefore.current){
-            GetUser().then((result)=>{
-                setValues(result);
-            });
-            hasLoadedBefore.current = false;
-        }
+        GetUser()
+        .then((result)=>{
+            setValues(result);
+            setLoaded(true);
+        })
+        .catch((error) => {
+            console.log("Error: ", error);
+            alert("An error has ocurred with the ApiCall.");
+        });
     },[]);
 
-    useEffect(()=>{
-        modifyData();
-    },[sortType, toggleSort, deletedRows, countryFilter])
-
     const setValues = (result:any) => {
-        apiData.current = result;
         result.forEach((element:any, key:number)=>{ //add unique Key to Data elements
             element.id = key;
         })
-        setData([...result]);
+        apiData.current = result;
     }
-    
-    function modifyData () {
-        /*INITIALIZE A NEW TABLE DATA FROM apiData*/
-        let data:any[] = [...apiData.current];
 
-        /*SORT TABLE DATA BY COUNTRY, NAME OR LASTNAME*/
+    function sortTab () {
+        let dataCopy:any[] = [];
+        if (apiData.current != undefined){
+            dataCopy = [...apiData.current];    
+        }
+
         if (sortType!==0){
             switch (sortType){
-                case 1://name
-                    data.sort((a, b) => a.name.first.localeCompare(b.name.first));
+                case 1:
+                dataCopy.sort((a:any, b:any) => a.name.first.localeCompare(b.name.first));
                     break;
-                case 2://lastName
-                    data.sort((a, b) => a.name.last.localeCompare(b.name.last));
+                case 2:
+                dataCopy.sort((a:any, b:any) => a.name.last.localeCompare(b.name.last));
                     break;
-                case 3://country
+                case 3:
                     if (!toggleSort) {
-                        data.sort((a, b) => a.location.country.localeCompare(b.location.country));
+                        dataCopy.sort((a:any, b:any) => a.location.country.localeCompare(b.location.country));
                     }else{
                         setSortType(0);
                     }
@@ -60,38 +61,32 @@ export default function Home () {
                     setSortType(0);
                     break;
             }
-        } 
-        
-        /*DELETE TABLE ROW*/
-        if (deletedRows.length > 0) {
-            deletedRows.forEach((row)=>{
-                function isTrue(element:any){
-                    if (element.id == row){
-                        return true;
-                    }else{
-                        return false;
-                    }
-                }
-                let index = data.findIndex(isTrue);
-                data.splice(index, 1);
-            })
-        }
-
-        /*FILTER BY COUNTRY*/
+        }     
+        return dataCopy;
+    }
+    
+    function filter () {
         if (countryFilter != "") {
-            let filteredData = data.filter((element:any) => element.location.country.toLowerCase().startsWith(countryFilter));
-            data = filteredData;
+             return orderedData.filter((element:any) => element.location.country.toLowerCase().startsWith(countryFilter));
+        }else{
+            return orderedData;
         }
-
-        /*SAVE CHANGES IN TABLE DATA*/
-        setData([
-            ...data //spread syntax
-        ]);
     }
 
-    function restartData () {
-        setDeletedRows([]);
-        setData([...apiData.current]);
+    function deleteRows () {
+        let data:any[] = [...filteredData];
+        if (deletedRows.length > 0) {
+            deletedRows.forEach((row)=>{
+                function isTrue(element:any){ //element from filteredData
+                    return (element.id == row);
+                }
+                let index = data.findIndex(isTrue);
+                if (index >= 0){ //per si es borra un element que despres es filtra.
+                    data.splice(index, 1);
+                }
+            })
+        }
+        return data;
     }
 
     function filterWord (e:any) {
@@ -114,7 +109,7 @@ export default function Home () {
             <div className="buttons">
                 <button className={toggleColor? "active":""} onClick={()=>setToggleColor(!toggleColor)}>Colorear</button>
                 <button className={sortType===3? "active":""} onClick={()=>sortTable(3)}>Ordenar por país</button>
-                <button onClick={restartData}>Resetear estado</button>
+                <button onClick={()=>setDeletedRows([])}>Resetear estado</button>
                 <input onKeyUp={()=>filterWord(event)}></input>
             </div>
             <table>
@@ -128,7 +123,7 @@ export default function Home () {
                     </tr>
                 </thead>
                 <tbody className={toggleColor ? "colorActive" : ""}>
-                    {data.map((element:any)=>{
+                    {deletedData.map((element:any)=>{
                         return(
                             <tr key={element.id}>
                                 <td>

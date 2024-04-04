@@ -10,12 +10,21 @@ export default function Home () {
     const [toggleColor, setToggleColor] = useState(false);
     const [toggleSort, setToggleSort] = useState(true);
     const [sortType, setSortType] = useState<number>(0);
-    const [deletedRows, setDeletedRows] = useState<number[]>([]);
-    const [countryFilter, setCountryFilter] = useState<string>("");
+    const [filters, setFilters] = useState<Filters>({
+        wordToFilter: "",
+        deletedRowsId: []
+    });
+
+    interface Filters {
+        wordToFilter: string,
+        deletedRowsId: number[]
+    }
 
     const orderedData:any = useMemo(()=>sortTab(),[sortType, toggleSort, loaded]);
-    const filteredData:any = useMemo(()=>filter(),[countryFilter, orderedData]);
-    const deletedData:any = useMemo(()=>deleteRows(),[deletedRows, filteredData]);
+    const renderData:any = useMemo(()=>{
+        let data:any = [...orderedData];
+        return filterData(data);
+    },[orderedData, filters]);
     
     useEffect(()=>{
         GetUser()
@@ -65,33 +74,45 @@ export default function Home () {
         return dataCopy;
     }
     
-    function filter () {
-        if (countryFilter != "") {
-             return orderedData.filter((element:any) => element.location.country.toLowerCase().startsWith(countryFilter));
-        }else{
-            return orderedData;
+    function filterData (data:any[]) {
+        if (filters.wordToFilter != "") {
+             data = data.filter((element:any) => element.location.country.toLowerCase().startsWith(filters.wordToFilter));
         }
-    }
-
-    function deleteRows () {
-        let data:any[] = [...filteredData];
-        if (deletedRows.length > 0) {
-            deletedRows.forEach((row)=>{
+        if (filters.deletedRowsId.length > 0) {
+            filters.deletedRowsId.forEach((row)=>{
                 function isTrue(element:any){ //element from filteredData
                     return (element.id == row);
                 }
                 let index = data.findIndex(isTrue);
-                if (index >= 0){ //per si es borra un element que despres es filtra.
-                    data.splice(index, 1);
-                }
+                data.splice(index, 1);
             })
         }
         return data;
     }
 
-    function filterWord (e:any) {
-        setCountryFilter(e.target.value);
+    function changeFilters (wordParam:any, rowId:number) {
+        let array = filters.deletedRowsId;
+        const word = wordParam==""? filters.wordToFilter : wordParam.target.value;
+
+        if (rowId>=0){
+            array.push(rowId);
+        }
+
+        let filtersP:Filters = {
+            wordToFilter : word,
+            deletedRowsId : array
+        }
+        setFilters(filtersP);
     }
+
+    function resetFilters () {
+        let filtersP:Filters = {
+            wordToFilter : filters.wordToFilter,
+            deletedRowsId : []
+        }
+        setFilters(filtersP);
+    }
+
 
     function sortTable (type:number) {
         if (type===3){
@@ -109,8 +130,8 @@ export default function Home () {
             <div className="buttons">
                 <button className={toggleColor? "active":""} onClick={()=>setToggleColor(!toggleColor)}>Colorear</button>
                 <button className={sortType===3? "active":""} onClick={()=>sortTable(3)}>Ordenar por país</button>
-                <button onClick={()=>setDeletedRows([])}>Resetear estado</button>
-                <input onKeyUp={()=>filterWord(event)}></input>
+                <button onClick={()=>resetFilters()}>Resetear estado</button>
+                <input onKeyUp={()=>changeFilters(event, -1)}></input>
             </div>
             <table>
                 <thead>
@@ -123,7 +144,7 @@ export default function Home () {
                     </tr>
                 </thead>
                 <tbody className={toggleColor ? "colorActive" : ""}>
-                    {deletedData.map((element:any)=>{
+                    {renderData.map((element:any)=>{
                         return(
                             <tr key={element.id}>
                                 <td>
@@ -133,7 +154,7 @@ export default function Home () {
                                 <td>{element.name.last}</td>
                                 <td>{element.location.country}</td>
                                 <td>
-                                    <button onClick={()=>setDeletedRows([...deletedRows, element.id])}>Borrar</button>
+                                    <button onClick={()=>changeFilters("", element.id)}>Borrar</button>
                                 </td>
                             </tr>
                         )

@@ -10,8 +10,22 @@ main{
     margin: 40px;
 }
 
+.active{
+    background-color: rgb(17, 77, 206);
+    color: rgb(233, 233, 233);
+}
+
 table{
     width: 100%;
+}
+.colorActive{
+    color: white;
+}
+.colorActive tr:nth-child(even){
+    background-color: #555;
+}
+.colorActive tr:nth-child(odd){
+    background-color: #333;
 }
 
 table td{
